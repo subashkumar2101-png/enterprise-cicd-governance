@@ -63,12 +63,12 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # 4. Production Deployment with Approval Gate (The Step 4 addition)
+  # 4. Production Deployment with Approval Gate
   deploy-production:
     name: Deploy to Production
     needs: [package]
     runs-on: ubuntu-latest
-    # Only deploy on direct push/merge to main, not on pull requests
+    # Only deploys when changes are merged into main
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment:
       name: production
