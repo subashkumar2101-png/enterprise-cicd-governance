@@ -1,0 +1,35 @@
+name: "Automated Release Pipeline"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-release:
+    name: Tag & Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create tags and releases
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Dynamic Version Tag
+        id: tagger
+        run: |
+          VERSION="v1.0.$(date +'%Y%m%d%H%M')"
+          echo "NEW_TAG=$VERSION" >> $GITHUB_ENV
+          echo "tag=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.NEW_TAG }}
+          name: "Release ${{ env.NEW_TAG }}"
+          generate_release_notes: true
+          draft: false
+          prerelease: false
