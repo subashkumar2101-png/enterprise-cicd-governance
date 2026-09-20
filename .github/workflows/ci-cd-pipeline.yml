@@ -62,3 +62,23 @@ jobs:
           name: compiled-app-${{ github.sha }}
           path: dist/
           retention-days: 7
+
+  # 4. Production Deployment with Approval Gate (The Step 4 addition)
+  deploy-production:
+    name: Deploy to Production
+    needs: [package]
+    runs-on: ubuntu-latest
+    # Only deploy on direct push/merge to main, not on pull requests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://myapp.example.com
+    permissions:
+      contents: read
+
+    steps:
+      - name: Deploying with Environment Secret
+        run: |
+          echo "Deploying application to production..."
+          echo "Target branch: ${{ github.ref }}"
+          echo "Token loaded securely: ${{ secrets.DEPLOY_TOKEN != '' }}"
