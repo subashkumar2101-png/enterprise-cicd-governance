@@ -30,7 +30,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
-          # cache: 'npm' removed here so it does not look for package-lock.json
 
       - name: Install Dependencies
         run: npm install
