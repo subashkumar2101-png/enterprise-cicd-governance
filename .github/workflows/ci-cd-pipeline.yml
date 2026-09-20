@@ -1,0 +1,64 @@
+name: "Main CI/CD Pipeline"
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+# Prevent race conditions and redundant CI runs on PR updates
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1. Call our centralized reusable test workflow
+  call-reusable-test:
+    uses: ./.github/workflows/reusable-test.yml
+    with:
+      node-version: '20'
+
+  # 2. Multi-OS Matrix Validation
+  matrix-platform-check:
+    name: Compatibility Matrix
+    needs: [call-reusable-test]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Cross-Platform Verification
+        run: |
+          echo "Executing OS validation on ${{ runner.os }}"
+
+  # 3. Build & Package Artifact
+  package:
+    name: Build & Package Artifact
+    needs: [matrix-platform-check]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Simulate Build Compilation
+        run: |
+          mkdir dist
+          echo "App version: ${{ github.sha }}" > dist/build-manifest.json
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-app-${{ github.sha }}
+          path: dist/
+          retention-days: 7
